@@ -9,8 +9,7 @@ const port = process.env.PORT || 5000
 app.use(cors());
 app.use(express.json());
 
-// crowd-funding
-// y4c3oofUg9qVq7Li
+
 
 
 
@@ -30,6 +29,35 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const campaignCollection = client.db("campaignDB").collection("campaign");
+
+    app.get('/campaign', async(req, res)=>{
+      const cursor = campaignCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    
+    app.get('/campaign/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const campaign = await Campaign.findById(id); // If using MongoDB
+        if (!campaign) {
+          return res.status(404).json({ error: "Campaign not found" });
+        }
+        res.json(campaign);
+      } catch (error) {
+        console.error("Server Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
+    
+    app.post('/campaign', async(req, res)=>{
+      const newAddCampaign = req.body;
+      console.log(newAddCampaign);
+      const result = await campaignCollection.insertOne(newAddCampaign);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -46,5 +74,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  console.log(`addCampaign running on port ${port}`)
 })
